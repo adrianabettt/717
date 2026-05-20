@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula 1 — A Descoberta dos Pacotes | EF07CO06</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   VARIÁVEIS — TEMA CLARO (leitura)
+   e TEMA ESCURO (interação) via classe .dark-screen
+═══════════════════════════════════════════════ */
+:root{
+  /* CLARO */
+  --bg:#f5f3ff; --bg2:#ffffff; --bg3:#f0f4ff;
+  --blue:#4f8ef7; --blue2:#2563c9; --blue3:#dbeafe;
+  --green:#38b26a; --green2:#1a7a45; --green3:#dcfce7;
+  --orange:#f08030; --orange2:#b85a10; --orange3:#fff3e0;
+  --red:#e05050; --red2:#a83030;
+  --purple:#8558d8; --purple2:#5b34a0;
+  --teal:#1a9fa0; --teal2:#126e6e;
+  --text:#1e2340; --text2:#44506e; --text3:#8896b3;
+  --border:rgba(79,142,247,0.18); --border2:rgba(79,142,247,0.38);
+  --r:14px; --rsm:9px;
+  --shadow:0 2px 12px rgba(80,100,180,0.10);
+  --shadow2:0 4px 20px rgba(80,100,180,0.14);
+  /* ESCURO (interação) */
+  --dk-bg:#0d1117; --dk-bg2:#161b27; --dk-bg3:#1c2235;
+  --dk-text:#eef2ff; --dk-text2:#94a3b8; --dk-text3:#4a5878;
+  --dk-border:rgba(99,132,255,0.18); --dk-border2:rgba(99,132,255,0.38);
+  --dk-blue:#4f8ef7; --dk-blue2:#93bbfd;
+  --dk-green:#22c55e; --dk-green2:#4ade80;
+  --dk-orange:#f59e0b; --dk-orange2:#fbbf24;
+  --dk-red:#ef4444; --dk-red2:#f87171;
+  --dk-purple:#8b5cf6; --dk-purple2:#a78bfa;
+  --dk-teal:#14b8a6; --dk-teal2:#2dd4bf;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text)}
+
+.app{display:flex;flex-direction:column;height:100vh;width:100vw;overflow:hidden}
+
+/* ── TOP BAR ── */
+.topbar{
+  flex-shrink:0;height:52px;background:#fff;
+  border-bottom:2px solid var(--border);
+  box-shadow:0 2px 10px rgba(79,142,247,0.08);
+  display:flex;align-items:center;padding:0 1.2rem;gap:0;position:relative;z-index:50;
+}
+.tb-logo{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.78rem;color:var(--blue2);letter-spacing:0.08em;padding-right:1rem;border-right:2px solid var(--border);margin-right:0.8rem;white-space:nowrap}
+.tb-steps{display:flex;gap:2px;flex:1;overflow:hidden}
+.tb-step{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:7px;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--text3);transition:all 0.2s;white-space:nowrap}
+.tb-step.done{color:var(--text2)}
+.tb-step.active{background:#e8f0fe;color:var(--blue2)}
+.tb-step.locked{cursor:not-allowed;opacity:0.38}
+.tb-dot{width:7px;height:7px;border-radius:50%;background:#ccd6f0;flex-shrink:0;transition:background 0.3s}
+.tb-step.done .tb-dot{background:var(--green)}
+.tb-step.active .tb-dot{background:var(--blue)}
+/* dot escuro quando tela ativa é dark */
+.tb-step.active.dark-active .tb-dot{background:var(--dk-blue2)}
+.tb-step.active.dark-active{background:#1c2235;color:var(--dk-blue2)}
+.tb-prog{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.tb-prog-track{width:80px;height:5px;background:#e0e8f8;border-radius:3px;overflow:hidden}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--teal));border-radius:3px;transition:width 0.4s ease}
+.tb-prog-pct{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--blue2);font-weight:700;min-width:30px}
+
+/* ── SCREENS ── */
+.screens{flex:1;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:translateX(40px);transition:opacity 0.35s ease,transform 0.35s ease}
+.screen.active{opacity:1;pointer-events:all;transform:translateX(0)}
+
+/* INNER */
+.screen-inner{flex:1;overflow-y:auto;overflow-x:hidden;padding:1.2rem 1.5rem 0.6rem;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.screen-inner::-webkit-scrollbar{width:4px}
+.screen-inner::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* BOTTOM NAV — claro */
+.screen-nav{flex-shrink:0;height:54px;background:#fff;border-top:2px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;gap:0.8rem}
+.sn-info{font-size:0.78rem;color:var(--text3)}
+
+/* FOOTER */
+.footer-brand{flex-shrink:0;height:28px;background:#f0f4ff;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.68rem;color:var(--text3);letter-spacing:0.05em;font-style:italic}
+
+/* BG decorativos — claro */
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(79,142,247,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(79,142,247,0.05) 1px,transparent 1px);background-size:40px 40px}
+.bg-orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0}
+.o1{top:-20vh;right:-10vw;width:45vw;height:45vw;background:radial-gradient(ellipse,rgba(180,210,255,0.35) 0%,transparent 65%)}
+.o2{bottom:-15vh;left:-8vw;width:36vw;height:36vw;background:radial-gradient(ellipse,rgba(180,245,220,0.28) 0%,transparent 65%)}
+
+/* ═══════════════════════════════════════
+   TEMA CLARO — componentes de leitura
+═══════════════════════════════════════ */
+h1.st{font-weight:900;font-size:clamp(1.4rem,2.5vw,2rem);line-height:1.2;color:var(--blue2)}
+h2.sh{font-weight:900;font-size:1rem;color:var(--text);margin-bottom:0.6rem}
+p.sp{color:var(--text2);font-size:0.9rem;line-height:1.7;margin-bottom:0.7rem}
+p.sp:last-child{margin-bottom:0}
+strong{color:var(--text);font-weight:800}
+code.ic{background:#e8f0fe;color:var(--blue2);padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:0.8em;border:1px solid #c5d8fb}
+
+.card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:1.1rem 1.2rem;margin-bottom:0.8rem;box-shadow:var(--shadow)}
+.card2{background:#f7f8ff;border:1px solid var(--border);border-radius:var(--rsm);padding:0.9rem 1rem;margin-bottom:0.6rem}
+.badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;border:1.5px solid;margin-bottom:0.6rem}
+.bdg-blue{background:#dbeafe;border-color:#93c5fd;color:var(--blue2)}
+.bdg-orange{background:#fff3e0;border-color:#fcd34d;color:var(--orange2)}
+
+.btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:0.85rem;padding:9px 22px;border-radius:var(--rsm);cursor:pointer;border:1.5px solid;transition:all 0.15s ease;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
+.btn-p{background:#dbeafe;border-color:#93c5fd;color:var(--blue2)}
+.btn-p:hover{background:#bfdbfe;border-color:var(--blue)}
+.btn-p:disabled{opacity:0.38;cursor:not-allowed}
+.btn-g{background:#f4f6fb;border-color:#d0d8ee;color:var(--text2)}
+.btn-g:hover{background:#e8ecf8}
+
+.box{border-radius:var(--rsm);padding:0.85rem 1rem;margin:0.6rem 0;font-size:0.87rem;color:var(--text2);line-height:1.6;border:1.5px solid}
+.bx-blue{background:#eff6ff;border-color:#bfdbfe;border-left:4px solid var(--blue)}
+.bx-blue strong{color:var(--blue2)}
+.bx-green{background:#f0fdf4;border-color:#bbf7d0;border-left:4px solid var(--green)}
+.bx-green strong{color:var(--green2)}
+
+/* TELA 1 */
+.hero-q{background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:2px solid #bfdbfe;border-radius:var(--r);padding:1.1rem 1.4rem;text-align:center;margin:0.6rem 0 1rem;box-shadow:0 3px 14px rgba(79,142,247,0.10)}
+.hero-q .em{font-size:2rem;margin-bottom:0.4rem;display:block}
+.hero-q p{color:var(--blue2);font-size:1rem;font-weight:800;font-style:italic;line-height:1.5;margin:0}
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:0.8rem;margin:0.8rem 0}
+.s3card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:1rem;text-align:center;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.s3card::after{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:2px 2px 0 0}
+.s3c1::after{background:var(--blue)} .s3c2::after{background:var(--teal)} .s3c3::after{background:var(--green)}
+.s3icon{font-size:1.8rem;margin-bottom:0.4rem}
+.s3title{font-weight:900;font-size:0.82rem;color:var(--text);margin-bottom:0.3rem}
+.s3desc{font-size:0.77rem;color:var(--text2);line-height:1.5}
+
+/* TELA 2 */
+.analogy-t{width:100%;border-collapse:collapse;font-size:0.82rem;margin:0.7rem 0;box-shadow:var(--shadow);border-radius:var(--rsm);overflow:hidden}
+.analogy-t th{background:#e8f0fe;color:var(--blue2);padding:8px 12px;text-align:left;font-weight:800;border-bottom:2px solid #bfdbfe}
+.analogy-t td{padding:8px 12px;border-bottom:1px solid #e8eef8;color:var(--text2);background:#fff}
+.analogy-t tr:last-child td{border-bottom:none}
+.td-term{color:var(--blue2);font-weight:800;font-family:'JetBrains Mono',monospace;font-size:0.78rem}
+.pkt-anatomy{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;margin:0.7rem 0;box-shadow:var(--shadow)}
+.pa-hdr{background:#e8f0fe;padding:0.55rem 1rem;font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:700;color:var(--blue2);letter-spacing:0.05em;border-bottom:1.5px solid #bfdbfe}
+.pa-fields{display:grid;grid-template-columns:repeat(4,1fr)}
+.pa-field{padding:0.7rem 0.8rem;border-right:1px solid #e8eef8;cursor:pointer;transition:background 0.15s;position:relative}
+.pa-field:last-child{border-right:none}
+.pa-field:hover{background:#eff6ff}
+.pa-field::after{content:'👆';position:absolute;bottom:4px;right:5px;font-size:0.65rem;opacity:0.5}
+.pa-lbl{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:4px;font-family:'JetBrains Mono',monospace}
+.pa-val{font-weight:800;font-size:0.88rem}
+.v-blue{color:var(--blue2)} .v-green{color:var(--green2)} .v-orange{color:var(--orange2)} .v-teal{color:var(--teal2)}
+.pa-info{display:none;background:#eff6ff;border-top:1.5px solid #bfdbfe;padding:0.7rem 1rem;font-size:0.82rem;color:var(--text2);line-height:1.5}
+.proto-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.7rem;margin:0.7rem 0}
+.proto-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--rsm);padding:0.85rem 1rem;border-top:4px solid;box-shadow:var(--shadow)}
+.pt-blue{border-top-color:var(--blue)} .pt-green{border-top-color:var(--green)} .pt-orange{border-top-color:var(--orange)} .pt-purple{border-top-color:var(--purple)}
+.pc-icon{font-size:1.3rem;margin-bottom:0.3rem}
+.pc-title{font-weight:900;font-size:0.82rem;margin-bottom:0.25rem}
+.pt-blue .pc-title{color:var(--blue2)} .pt-green .pc-title{color:var(--green2)} .pt-orange .pc-title{color:var(--orange2)} .pt-purple .pc-title{color:var(--purple2)}
+.pc-def{font-size:0.78rem;color:var(--text2);line-height:1.5}
+
+/* TELA 6 — GLOSSÁRIO */
+.glos-note{background:linear-gradient(135deg,#fffbeb,#eff6ff);border:2px solid #fcd34d;border-radius:var(--r);padding:0.9rem 1.2rem;margin-bottom:0.9rem;display:flex;align-items:center;gap:0.8rem;box-shadow:0 2px 10px rgba(245,158,11,0.12)}
+.gn-icon{font-size:1.5rem;flex-shrink:0}
+.gn-text{font-weight:800;font-size:0.88rem;color:var(--orange2);line-height:1.5}
+.glos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.7rem}
+.glos-c{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:0.9rem;transition:all 0.2s;box-shadow:var(--shadow)}
+.glos-c:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--shadow2)}
+.glos-term{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.85rem;margin-bottom:0.35rem}
+.gt-blue{color:var(--blue2)} .gt-green{color:var(--green2)} .gt-orange{color:var(--orange2)} .gt-purple{color:var(--purple2)} .gt-teal{color:var(--teal2)} .gt-red{color:var(--red2)}
+.glos-def{font-size:0.78rem;color:var(--text2);line-height:1.5}
+.done-card{background:linear-gradient(135deg,#f0fdf4,#eff6ff);border:2px solid #86efac;border-radius:var(--r);padding:1.2rem;text-align:center;margin-top:0.8rem;box-shadow:var(--shadow)}
+.done-em{font-size:2.2rem;margin-bottom:0.4rem;display:block}
+.done-title{font-weight:900;font-size:1rem;color:var(--text);margin-bottom:0.4rem}
+.done-sub{font-size:0.83rem;color:var(--text2);line-height:1.5}
+.done-chips{display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin-top:0.7rem}
+.chip{display:inline-block;font-size:0.73rem;font-weight:700;padding:4px 12px;border-radius:20px;border:1.5px solid}
+.ch-blue{background:#dbeafe;border-color:#93c5fd;color:var(--blue2)}
+.ch-green{background:#dcfce7;border-color:#86efac;color:var(--green2)}
+.ch-orange{background:#fff3e0;border-color:#fcd34d;color:var(--orange2)}
+
+/* ═══════════════════════════════════════
+   TEMA ESCURO — telas de interação
+   Aplicado via .screen.dark-screen
+═══════════════════════════════════════ */
+.dark-screen{background:var(--dk-bg)}
+.dark-screen .screen-inner{scrollbar-color:var(--dk-border2) transparent}
+.dark-screen .screen-inner::-webkit-scrollbar-thumb{background:var(--dk-border2)}
+
+/* nav escura */
+.dark-screen .screen-nav{background:var(--dk-bg2);border-top:1.5px solid var(--dk-border)}
+.dark-screen .sn-info{color:var(--dk-text3)}
+
+/* títulos e textos no escuro */
+.dark-screen h2.sh{color:var(--dk-text)}
+.dark-screen p.sp{color:var(--dk-text2)}
+.dark-screen strong{color:var(--dk-text)}
+.dark-screen code.ic{background:rgba(99,132,255,0.2);color:var(--dk-blue2);border-color:rgba(99,132,255,0.3)}
+
+/* badge no escuro */
+.dark-screen .badge.bdg-blue{background:rgba(79,142,247,0.18);border-color:rgba(79,142,247,0.4);color:var(--dk-blue2)}
+.dark-screen .badge.bdg-orange{background:rgba(245,158,11,0.18);border-color:rgba(245,158,11,0.4);color:var(--dk-orange2)}
+
+/* botões no escuro */
+.dark-screen .btn-p{background:rgba(79,142,247,0.22);border-color:var(--dk-blue);color:var(--dk-blue2)}
+.dark-screen .btn-p:hover{background:rgba(79,142,247,0.40)}
+.dark-screen .btn-g{background:rgba(255,255,255,0.06);border-color:var(--dk-border2);color:var(--dk-text2)}
+.dark-screen .btn-g:hover{background:rgba(255,255,255,0.12)}
+.dark-screen .btn-d{background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.5);color:var(--dk-red2)}
+.dark-screen .btn-d:hover{background:rgba(239,68,68,0.32)}
+.dark-screen .btn-d:disabled{opacity:0.35;cursor:not-allowed}
+
+/* ═══ TELA 3 — DINÂMICA (escuro) ═══ */
+/* indicador de tela interativa */
+.interact-banner{
+  display:flex;align-items:center;gap:0.7rem;
+  background:rgba(79,142,247,0.12);border:1.5px solid rgba(79,142,247,0.35);
+  border-radius:var(--rsm);padding:0.6rem 1rem;margin-bottom:0.9rem;
+}
+.ib-dot{width:10px;height:10px;border-radius:50%;background:var(--dk-blue2);flex-shrink:0;animation:pulse-dot 1.5s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(79,142,247,0.6)}50%{opacity:0.8;box-shadow:0 0 0 5px rgba(79,142,247,0)}}
+.ib-text{font-size:0.8rem;font-weight:700;color:var(--dk-blue2)}
+
+/* etapas da dinâmica — numeradas e clicáveis */
+.din-steps{display:flex;flex-direction:column;gap:0.6rem;margin:0.7rem 0}
+.din-step{
+  display:flex;align-items:flex-start;gap:0.9rem;
+  background:var(--dk-bg2);border:1.5px solid var(--dk-border);
+  border-radius:var(--rsm);padding:0.85rem 1rem;
+  transition:all 0.2s;
+}
+.din-step.done-step{border-color:rgba(34,197,94,0.45);background:rgba(34,197,94,0.06)}
+.ds-num{
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(79,142,247,0.2);border:1.5px solid rgba(79,142,247,0.5);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:700;
+  color:var(--dk-blue2);flex-shrink:0;margin-top:1px;
+}
+.din-step.done-step .ds-num{background:rgba(34,197,94,0.2);border-color:rgba(34,197,94,0.5);color:var(--dk-green2)}
+.ds-body{flex:1}
+.ds-title{font-weight:900;font-size:0.88rem;color:var(--dk-text);margin-bottom:4px}
+.ds-desc{font-size:0.8rem;color:var(--dk-text2);line-height:1.55}
+.ds-check{margin-top:6px;display:flex;align-items:center;gap:0.5rem}
+
+/* BUILDER DE PACOTES */
+.pkt-builder{background:var(--dk-bg2);border:2px solid rgba(79,142,247,0.4);border-radius:var(--r);padding:1rem;margin:0.8rem 0}
+.pb-title{font-family:'JetBrains Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--dk-blue2);margin-bottom:0.7rem;display:flex;align-items:center;gap:6px}
+.pb-title::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--dk-blue2);display:inline-block}
+.pkt-input-dk{
+  width:100%;background:var(--dk-bg3);border:2px solid rgba(79,142,247,0.5);
+  border-radius:var(--rsm);padding:0.65rem 1rem;
+  color:var(--dk-text);font-family:'Nunito',sans-serif;font-size:0.95rem;
+  outline:none;transition:all 0.2s;margin-bottom:0.8rem;
+  box-shadow:0 0 0 0 rgba(79,142,247,0);
+}
+.pkt-input-dk:focus{border-color:var(--dk-blue2);box-shadow:0 0 0 3px rgba(79,142,247,0.2);background:#1a2035}
+.pkt-input-dk::placeholder{color:var(--dk-text3)}
+.pkt-cards-grid{display:flex;gap:0.6rem;flex-wrap:wrap}
+.pkt-demo{
+  background:var(--dk-bg3);border:1.5px solid rgba(79,142,247,0.3);
+  border-radius:var(--rsm);padding:0.8rem;min-width:130px;flex:1;max-width:180px;
+  transition:transform 0.2s,border-color 0.2s;
+}
+.pkt-demo:hover{transform:translateY(-3px);border-color:rgba(79,142,247,0.7)}
+.pd-top{font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--dk-text3);margin-bottom:6px;letter-spacing:0.06em}
+.pd-row{font-size:0.75rem;margin-bottom:3px;color:var(--dk-text2)}
+.pd-word{font-weight:900;font-size:1.1rem;margin-top:8px;padding-top:8px;border-top:1.5px solid var(--dk-border);letter-spacing:0.05em}
+
+/* CHECKBOX ESTILIZADO */
+.dk-check{display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:5px 8px;border-radius:7px;transition:background 0.15s}
+.dk-check:hover{background:rgba(79,142,247,0.1)}
+.dk-check input{display:none}
+.dk-check-box{width:20px;height:20px;border-radius:5px;border:2px solid rgba(79,142,247,0.5);background:var(--dk-bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;font-size:0.75rem}
+.dk-check input:checked+.dk-check-box{background:var(--dk-green2);border-color:var(--dk-green2);color:#000}
+.dk-check-lbl{font-size:0.82rem;color:var(--dk-text2);font-weight:700}
+
+/* SCORE DA DINÂMICA */
+.din-score{
+  display:none;margin-top:0.6rem;
+  background:rgba(34,197,94,0.1);border:1.5px solid rgba(34,197,94,0.4);
+  border-radius:var(--rsm);padding:0.7rem 1rem;
+  font-size:0.85rem;color:var(--dk-green2);font-weight:700;text-align:center;
+}
+
+/* ═══ TELA 4 — SIMULADOR (escuro) ═══ */
+.sim-ctrl{display:flex;gap:0.8rem;align-items:center;flex-wrap:wrap;margin-bottom:0.7rem}
+.ctrl-g{display:flex;align-items:center;gap:0.5rem;flex:1;min-width:160px}
+.ctrl-g label{font-size:0.78rem;color:var(--dk-text2);white-space:nowrap;font-weight:700}
+input[type=range]{flex:1;-webkit-appearance:none;height:5px;background:var(--dk-border2);border-radius:3px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--dk-blue);cursor:pointer;border:2px solid var(--dk-bg);box-shadow:0 0 0 3px rgba(79,142,247,0.3)}
+.ctrl-val{font-family:'JetBrains Mono',monospace;font-size:0.76rem;font-weight:700;color:var(--dk-orange2);min-width:38px;text-align:right}
+.sim-lane{background:var(--dk-bg2);border:1.5px solid rgba(79,142,247,0.3);border-radius:var(--rsm);display:flex;align-items:center;padding:0.5rem;min-height:70px;margin:0.6rem 0;position:relative;overflow:hidden}
+.sim-node{width:66px;text-align:center;flex-shrink:0;padding:0 0.3rem}
+.sim-node-ic{font-size:1.3rem}
+.sim-node-lb{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--dk-text3);margin-top:2px;font-weight:700}
+.sim-node-ip{font-size:0.58rem;color:var(--dk-text3);margin-top:1px}
+.sim-canal{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:52px;overflow:hidden}
+.canal-line{position:absolute;height:2px;background:rgba(79,142,247,0.25);left:0;right:0;top:50%;transform:translateY(-50%)}
+.pkts-row{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:3px;flex-wrap:wrap;padding:3px}
+.pk{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:700;border:1.5px solid;transition:all 0.25s;cursor:default}
+.pk-wait{background:rgba(79,142,247,0.15);border-color:rgba(79,142,247,0.45);color:var(--dk-blue2)}
+.pk-move{background:rgba(245,158,11,0.22);border-color:var(--dk-orange2);color:var(--dk-orange2);animation:blink .75s infinite}
+.pk-ok{background:rgba(34,197,94,0.22);border-color:var(--dk-green2);color:var(--dk-green2)}
+.pk-lost{background:rgba(239,68,68,0.18);border-color:var(--dk-red2);color:var(--dk-red2);text-decoration:line-through;opacity:.65}
+.pk-resend{background:rgba(139,92,246,0.22);border-color:var(--dk-purple2);color:var(--dk-purple2);animation:flash .35s 3}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes flash{0%,100%{opacity:1}50%{opacity:.2}}
+.leg{display:flex;gap:0.7rem;flex-wrap:wrap;margin-bottom:0.6rem}
+.leg-i{display:flex;align-items:center;gap:4px;font-size:0.72rem;color:var(--dk-text3)}
+.leg-sq{width:12px;height:12px;border-radius:3px;border:1.5px solid;flex-shrink:0}
+.res-panels{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;margin:0.6rem 0}
+.res-p{background:var(--dk-bg2);border:1.5px solid var(--dk-border);border-radius:var(--rsm);padding:0.7rem 0.9rem}
+.res-lbl{font-family:'JetBrains Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--dk-text3);margin-bottom:4px}
+.res-msg{font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--dk-text2);word-break:break-all;min-height:28px;line-height:1.5}
+.res-msg.done{color:var(--dk-green2);font-weight:700}
+.stats-r{display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.5rem}
+.stat{font-family:'JetBrains Mono',monospace;font-size:0.72rem;padding:3px 9px;border-radius:20px;border:1.5px solid;font-weight:700}
+.st-b{background:rgba(79,142,247,0.15);border-color:rgba(79,142,247,0.4);color:var(--dk-blue2)}
+.st-g{background:rgba(34,197,94,0.15);border-color:rgba(34,197,94,0.4);color:var(--dk-green2)}
+.st-r{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.4);color:var(--dk-red2)}
+.st-o{background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.4);color:var(--dk-orange2)}
+.sim-log{background:rgba(0,0,0,0.4);border:1.5px solid var(--dk-border);border-radius:var(--rsm);height:80px;overflow-y:auto;padding:0.6rem 0.8rem;font-family:'JetBrains Mono',monospace;font-size:0.7rem;line-height:1.85}
+.ll-ok{color:var(--dk-green2)} .ll-err{color:var(--dk-red2)} .ll-warn{color:var(--dk-orange2)} .ll-info{color:var(--dk-blue2)} .ll-sys{color:var(--dk-text3)}
+.scenarios{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:0.7rem}
+.scen{background:var(--dk-bg2);border:1.5px solid var(--dk-border);border-radius:var(--rsm);padding:0.7rem 0.9rem;cursor:pointer;transition:all 0.2s;text-align:center}
+.scen:hover{transform:translateY(-3px)}
+.scen-title{font-weight:900;font-size:0.82rem;margin-bottom:0.2rem}
+.scen-desc{font-size:0.7rem;color:var(--dk-text3);line-height:1.4}
+.sc-g{border-color:rgba(34,197,94,0.3)} .sc-g .scen-title{color:var(--dk-green2)} .sc-g:hover{border-color:var(--dk-green2);background:rgba(34,197,94,0.07)}
+.sc-o{border-color:rgba(245,158,11,0.3)} .sc-o .scen-title{color:var(--dk-orange2)} .sc-o:hover{border-color:var(--dk-orange2);background:rgba(245,158,11,0.07)}
+.sc-r{border-color:rgba(239,68,68,0.3)} .sc-r .scen-title{color:var(--dk-red2)} .sc-r:hover{border-color:var(--dk-red2);background:rgba(239,68,68,0.07)}
+/* input sim no escuro */
+.sim-frase-input{
+  flex:1;min-width:150px;
+  background:var(--dk-bg3);border:2px solid rgba(79,142,247,0.45);
+  border-radius:var(--rsm);padding:0.5rem 0.8rem;
+  color:var(--dk-text);font-family:'Nunito',sans-serif;font-size:0.85rem;outline:none;
+  transition:border-color 0.15s;
+}
+.sim-frase-input:focus{border-color:var(--dk-blue2)}
+.sim-frase-input::placeholder{color:var(--dk-text3)}
+/* label escuro */
+.dk-lbl{font-family:'JetBrains Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--dk-text3);margin-bottom:3px}
+
+/* ═══ TELA 5 — QUIZ (escuro) ═══ */
+.quiz-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem}
+.quiz-info{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--dk-text2)}
+.q-num-badge{font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--dk-text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem}
+.q-text{font-weight:800;font-size:0.98rem;color:var(--dk-text);line-height:1.55;margin-bottom:0.9rem}
+.q-opts{display:flex;flex-direction:column;gap:0.5rem}
+/* OPÇÕES — destaque máximo para clicar */
+.q-opt{
+  display:flex;align-items:center;gap:0.8rem;
+  padding:0.8rem 1.1rem;border-radius:var(--rsm);
+  border:2px solid rgba(79,142,247,0.3);
+  cursor:pointer;font-size:0.88rem;color:var(--dk-text2);
+  background:var(--dk-bg2);
+  transition:all 0.18s;
+  position:relative;overflow:hidden;
+}
+.q-opt::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:rgba(79,142,247,0.4);transition:background 0.15s}
+.q-opt:hover{border-color:rgba(79,142,247,0.8);background:rgba(79,142,247,0.12);color:var(--dk-text);transform:translateX(3px)}
+.q-opt:hover::before{background:var(--dk-blue2)}
+.q-opt.correct{background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.6);color:var(--dk-green2);font-weight:700;transform:none}
+.q-opt.correct::before{background:var(--dk-green2)}
+.q-opt.wrong{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.5);color:var(--dk-red2);transform:none}
+.q-opt.wrong::before{background:var(--dk-red2)}
+.q-opt.disabled{cursor:not-allowed}
+.q-opt-lt{width:26px;height:26px;border-radius:6px;background:rgba(79,142,247,0.15);border:1.5px solid rgba(79,142,247,0.4);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.72rem;color:var(--dk-blue2);flex-shrink:0;font-family:'JetBrains Mono',monospace;transition:all 0.15s}
+.q-opt:hover .q-opt-lt{background:rgba(79,142,247,0.3);border-color:var(--dk-blue2)}
+.q-opt.correct .q-opt-lt{background:var(--dk-green2);border-color:var(--dk-green2);color:#000}
+.q-opt.wrong .q-opt-lt{background:var(--dk-red2);border-color:var(--dk-red2);color:#fff}
+.q-feedback{margin-top:0.7rem;padding:0.75rem 1rem;border-radius:var(--rsm);font-size:0.83rem;line-height:1.5;display:none;border:1.5px solid}
+.qf-ok{background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.4);color:var(--dk-green2)}
+.qf-err{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.35);color:var(--dk-red2)}
+.quiz-nav{display:flex;align-items:center;justify-content:space-between;margin-top:0.9rem;gap:0.5rem}
+.q-progress{display:flex;gap:5px;flex:1;justify-content:center;flex-wrap:wrap}
+.q-dot{width:11px;height:11px;border-radius:50%;background:var(--dk-border2);transition:all 0.2s;cursor:pointer;border:1.5px solid transparent}
+.q-dot.answered.qd-ok{background:var(--dk-green2)}
+.q-dot.answered.qd-err{background:var(--dk-red2)}
+.q-dot.current{background:var(--dk-blue2);box-shadow:0 0 0 3px rgba(79,142,247,0.3)}
+/* score */
+.score-panel{background:var(--dk-bg2);border:1.5px solid var(--dk-border);border-radius:var(--r);padding:1.5rem;text-align:center}
+.score-circle{width:90px;height:90px;border-radius:50%;margin:0.5rem auto 1rem;display:flex;align-items:center;justify-content:center;flex-direction:column;border:3px solid;font-family:'JetBrains Mono',monospace}
+.sc-a{border-color:var(--dk-green2);background:rgba(34,197,94,0.1)} .sc-b{border-color:var(--dk-orange2);background:rgba(245,158,11,0.1)} .sc-c{border-color:var(--dk-red2);background:rgba(239,68,68,0.1)}
+.sc-nota{font-size:1.8rem;font-weight:700}
+.sc-a .sc-nota{color:var(--dk-green2)} .sc-b .sc-nota{color:var(--dk-orange2)} .sc-c .sc-nota{color:var(--dk-red2)}
+.sc-den{font-size:0.7rem;color:var(--dk-text3)}
+.score-msg{font-weight:800;font-size:1rem;color:var(--dk-text);margin-bottom:0.4rem}
+.score-sub{font-size:0.85rem;color:var(--dk-text2);line-height:1.5}
+.score-detail{display:grid;grid-template-columns:repeat(2,1fr);gap:0.5rem;margin:0.8rem 0;text-align:left}
+.sd-item{background:var(--dk-bg3);border-radius:var(--rsm);padding:0.6rem 0.8rem;font-size:0.78rem;border:1.5px solid var(--dk-border)}
+.sd-item.sd-ok{border-left:4px solid var(--dk-green2)} .sd-item.sd-err{border-left:4px solid var(--dk-red2)}
+.sd-q{color:var(--dk-text2);line-height:1.4;margin-bottom:3px}
+.sd-ans{font-weight:700;font-size:0.75rem}
+.sd-item.sd-ok .sd-ans{color:var(--dk-green2)} .sd-item.sd-err .sd-ans{color:var(--dk-red2)}
+
+@media(max-width:640px){
+  .steps3,.proto-grid,.scenarios,.res-panels{grid-template-columns:1fr}
+  .pa-fields{grid-template-columns:repeat(2,1fr)}
+  .glos-grid{grid-template-columns:repeat(2,1fr)}
+  .score-detail{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-orb o1"></div>
+<div class="bg-orb o2"></div>
+
+<div class="app">
+
+  <div class="topbar">
+    <div class="tb-logo">EF07CO06</div>
+    <div class="tb-steps" id="tbSteps"></div>
+    <div class="tb-prog">
+      <div class="tb-prog-track"><div class="tb-prog-fill" id="tbFill" style="width:0%"></div></div>
+      <span class="tb-prog-pct" id="tbPct">0%</span>
+    </div>
+  </div>
+
+  <div class="screens" id="screens">
+
+    <!-- ═══ TELA 1 — INTRODUÇÃO (claro) ═══ -->
+    <div class="screen" id="screen-0">
+      <div class="screen-inner">
+        <span class="badge bdg-blue">Computação · 7.º Ano</span>
+        <h1 class="st">A Descoberta dos Pacotes</h1>
+        <p class="sp" style="margin-bottom:0.5rem">Você já enviou uma foto pelo WhatsApp?  Mas você sabe <strong>como a foto chega até o destinatário</strong>?</p>
+        <div class="hero-q">
+          <span class="em">PENSE 🤔</span>
+          <p>"Quando você manda uma foto pelo WhatsApp, ela vai <em>inteira de uma vez</em> pela internet ou vai de outro jeito?"</p>
+        </div>
+        <p class="sp">Resposta: ela vai <strong>fatiada em pedaços</strong>! Se a internet tentasse enviar arquivos inteiros, um único arquivo congestionaria a rede e ninguém mais conseguiria usá-la. Então</p>
+        <div class="steps3">
+          <div class="s3card s3c1"><div class="s3icon">✂️</div><div class="s3title">1. FATIAR</div><div class="s3desc">O arquivo é dividido em pequenos pedaços chamados <strong>pacotes</strong>.</div></div>
+          <div class="s3card s3c2"><div class="s3icon">🚀</div><div class="s3title">2. ENVIAR</div><div class="s3desc">Cada pacote viaja por <strong>caminhos diferentes</strong> até o destino.</div></div>
+          <div class="s3card s3c3"><div class="s3icon">🧩</div><div class="s3title">3. REMONTAR</div><div class="s3desc">No destino, os pacotes são <strong>reunidos na ordem certa</strong>.</div></div>
+        </div>
+      </div>
+      <div class="screen-nav">
+        <span class="sn-info">Tela 1 de 6 — Leitura</span>
+        <button class="btn btn-p" onclick="goTo(1)">Conceitos →</button>
+      </div>
+    </div>
+
+    <!-- ═══ TELA 2 — CONCEITOS (claro) ═══ -->
+    <div class="screen" id="screen-1">
+      <div class="screen-inner">
+        <h2 class="sh">Conceitos Fundamentais</h2>
+        <h2 class="sh" style="font-size:0.85rem;color:var(--text2);margin-bottom:0.4rem">Analogia: comparando os protocolos no dia a dia</h2>
+        <table class="analogy-t">
+          <tr><th>Protocolo Humano</th><th>Protocolo de Computadores</th></tr>
+          <tr><td>Levantar a mão para falar na aula</td><td><span class="td-term">TCP/IP</span> — define quem envia e verifica se chegou</td></tr>
+          <tr><td>Endereço no envelope (CEP, rua, nº)</td><td><span class="td-term">IP</span> — endereço único de cada dispositivo</td></tr>
+          <tr><td>Numerar páginas de um livro</td><td><span class="td-term">TCP</span> — número de sequência para remontar na ordem</td></tr>
+        </table>
+        <h2 class="sh" style="font-size:0.85rem;color:var(--text2);margin:0.6rem 0 0.3rem">Anatomia de um pacote — clique em cada campo</h2>
+        <div class="pkt-anatomy">
+          <div class="pa-hdr">📦 PACOTE DE DADOS — clique em cada campo para saber mais</div>
+          <div class="pa-fields">
+            <div class="pa-field" onclick="showPktInfo('orig')"><div class="pa-lbl">IP de Origem</div><div class="pa-val v-blue">192.168.1.10</div></div>
+            <div class="pa-field" onclick="showPktInfo('dest')"><div class="pa-lbl">IP de Destino</div><div class="pa-val v-green">216.58.202.14</div></div>
+            <div class="pa-field" onclick="showPktInfo('seq')"><div class="pa-lbl">Nº de Sequência</div><div class="pa-val v-orange">3 de 47</div></div>
+            <div class="pa-field" onclick="showPktInfo('pay')"><div class="pa-lbl">Dado (Payload)</div><div class="pa-val v-teal">1472 bytes</div></div>
+          </div>
+          <div class="pa-info" id="pktInfo"></div>
+        </div>
+        <div class="proto-grid">
+          <div class="proto-card pt-blue"><div class="pc-icon">📍</div><div class="pc-title">IP — Internet Protocol</div><div class="pc-def">Cuida do <strong>endereço</strong>. Cada dispositivo tem um IP único. É o CEP digital da rede.</div></div>
+          <div class="proto-card pt-green"><div class="pc-icon">✅</div><div class="pc-title">TCP — Transmission Control</div><div class="pc-def">Cuida da <strong>entrega</strong>. Verifica se todos os pacotes chegaram e pede reenvio se faltar algum.</div></div>
+          <div class="proto-card pt-orange"><div class="pc-icon">🔀</div><div class="pc-title">Roteador</div><div class="pc-def">O <strong>carteiro inteligente</strong>. Recebe pacotes e decide o melhor caminho para o próximo ponto.</div></div>
+          <div class="proto-card pt-purple"><div class="pc-icon">🔒</div><div class="pc-title">HTTP / HTTPS</div><div class="pc-def">Protocolo para páginas web. O <strong>"S"</strong> do HTTPS significa criptografia — dados protegidos.</div></div>
+        </div>
+      </div>
+      <div class="screen-nav">
+        <button class="btn btn-g" onclick="goTo(0)">← Voltar</button>
+        <button class="btn btn-p" onclick="goTo(2)">Dinâmica →</button>
+      </div>
+    </div>
+
+    <!-- ═══ TELA 3 — DINÂMICA (escuro — interação) ═══ -->
+    <div class="screen dark-screen" id="screen-2">
+      <div class="screen-inner">
+        <div class="interact-banner">
+          <div class="ib-dot"></div>
+          <span class="ib-text">ATIVIDADE INTERATIVA — Leia cada etapa e marque ao concluir</span>
+        </div>
+
+        <h2 class="sh">Dinâmica Digital dos Pacotes</h2>
+        <p class="sp" style="margin-bottom:0.8rem">Você vai montar pacotes de dados no computador, simulando o que acontece quando uma mensagem é enviada pela internet. Complete as etapas abaixo:</p>
+
+        <div class="din-steps">
+
+          <div class="din-step" id="ds1">
+            <div class="ds-num">1</div>
+            <div class="ds-body">
+              <div class="ds-title">Conheça os papéis na rede</div>
+              <div class="ds-desc">Em uma transmissão de dados existem três componentes: <strong style="color:var(--dk-blue2)">Dispositivo A</strong> (remetente) que envia os dados · <strong style="color:var(--dk-orange2)">Roteador</strong> que encaminha os pacotes · <strong style="color:var(--dk-green2)">Dispositivo B</strong> (destinatário) que recebe e remonta a mensagem.</div>
+              <div class="ds-check">
+                <label class="dk-check"><input type="checkbox" onchange="checkStep(1)"><div class="dk-check-box">✓</div><span class="dk-check-lbl">Entendi os papéis!</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="din-step" id="ds2">
+            <div class="ds-num">2</div>
+            <div class="ds-body">
+              <div class="ds-title">Entenda o protocolo obrigatório</div>
+              <div class="ds-desc">Cada pacote precisa ter: <code class="ic">De: [origem] | Para: [destino]</code> · número de sequência <code class="ic">1 de 4</code> · e apenas <strong style="color:var(--dk-orange2)">uma palavra</strong> como conteúdo. Sem essas informações o destinatário descarta o pacote e pede reenvio.</div>
+              <div class="ds-check">
+                <label class="dk-check"><input type="checkbox" onchange="checkStep(2)"><div class="dk-check-box">✓</div><span class="dk-check-lbl">Entendi as regras!</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="din-step" id="ds3">
+            <div class="ds-num">3</div>
+            <div class="ds-body">
+              <div class="ds-title">Monte seus pacotes — digite a frase secreta abaixo</div>
+              <div class="ds-desc" style="margin-bottom:0.6rem">Digite uma frase de 3 a 5 palavras. O sistema vai <strong style="color:var(--dk-blue2)">gerar automaticamente</strong> os pacotes com todas as informações do protocolo.</div>
+              <div class="pkt-builder">
+                <div class="pb-title">CONSTRUTOR DE PACOTES</div>
+                <input type="text" class="pkt-input-dk" id="fraseInput" placeholder="Ex: A INTERNET É MUITO RÁPIDA" maxlength="50" oninput="buildPackets()">
+                <div class="pkt-cards-grid" id="pktCards"></div>
+              </div>
+              <div class="ds-check">
+                <label class="dk-check"><input type="checkbox" id="chk3" onchange="checkStep(3)"><div class="dk-check-box">✓</div><span class="dk-check-lbl">Montei meus pacotes!</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="din-step" id="ds4">
+            <div class="ds-num">4</div>
+            <div class="ds-body">
+              <div class="ds-title">Simule a perda de um pacote</div>
+              <div class="ds-desc">Na internet real, pacotes podem se perder por ruído elétrico ou instabilidade na rede. Se o pacote <strong style="color:var(--dk-red2)">número 2</strong> da sua frase chegasse com dados errados, o que você, como Dispositivo B, enviaria de volta ao remetente?</div>
+              <div style="margin-top:0.6rem">
+                <input type="text" class="pkt-input-dk" id="respostaPerda" placeholder="Digite sua resposta aqui..." style="margin-bottom:0" oninput="checkResposta()">
+              </div>
+              <div class="ds-check" style="margin-top:0.5rem">
+                <label class="dk-check"><input type="checkbox" id="chk4" onchange="checkStep(4)"><div class="dk-check-box">✓</div><span class="dk-check-lbl">Respondi!</span></label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="din-score" id="dinScore">
+          🎉 Muito bem! Você completou todas as etapas da dinâmica. Agora vá para o Simulador para ver isso acontecendo em tempo real!
+        </div>
+      </div>
+      <div class="screen-nav">
+        <button class="btn btn-g" onclick="goTo(1)">← Voltar</button>
+        <button class="btn btn-p" onclick="goTo(3)">Simulador →</button>
+      </div>
+    </div>
+
+    <!-- ═══ TELA 4 — SIMULADOR (escuro — interação) ═══ -->
+    <div class="screen dark-screen" id="screen-3">
+      <div class="screen-inner">
+        <div class="interact-banner">
+          <div class="ib-dot"></div>
+          <span class="ib-text">ATIVIDADE INTERATIVA — Escolha um cenário e clique em Transmitir</span>
+        </div>
+
+        <h2 class="sh">Simulador TCP/IP — A Internet na sua Tela</h2>
+
+        <div class="scenarios">
+          <div class="scen sc-g" onclick="applyScenario(0,5)"><div class="scen-title">🟢 Rede Perfeita</div><div class="scen-desc">Perda: 0% · Velocidade: máx</div></div>
+          <div class="scen sc-o" onclick="applyScenario(30,3)"><div class="scen-title">🟡 Rede Instável</div><div class="scen-desc">Perda: 30% · Média</div></div>
+          <div class="scen sc-r" onclick="applyScenario(60,1)"><div class="scen-title">🔴 Rede Caótica</div><div class="scen-desc">Perda: 60% · Lenta</div></div>
+        </div>
+
+        <div class="sim-ctrl">
+          <div class="ctrl-g">
+            <label>Taxa de perda:</label>
+            <input type="range" id="lossSlider" min="0" max="60" value="0" step="5" oninput="updLoss()">
+            <span class="ctrl-val" id="lossVal">0%</span>
+          </div>
+          <div class="ctrl-g">
+            <label>Velocidade:</label>
+            <input type="range" id="speedSlider" min="1" max="5" value="3" step="1" oninput="updSpeed()">
+            <span class="ctrl-val" id="speedVal">⚡⚡⚡</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.6rem;align-items:center">
+          <input type="text" class="sim-frase-input" id="simFrase" placeholder="Frase a transmitir" value="APRENDENDO SOBRE PROTOCOLOS DE REDE">
+          <button class="btn btn-p" id="btnStart" onclick="startSim()">▶ Transmitir</button>
+          <button class="btn btn-d" id="btnDrop" onclick="dropPkt()" disabled>⚡ Perder</button>
+          <button class="btn btn-g" onclick="resetSim()">↺</button>
+        </div>
+
+        <div class="leg">
+          <div class="leg-i"><div class="leg-sq" style="background:rgba(79,142,247,0.15);border-color:rgba(79,142,247,0.45)"></div>Aguardando</div>
+          <div class="leg-i"><div class="leg-sq" style="background:rgba(245,158,11,0.22);border-color:var(--dk-orange2)"></div>Em trânsito</div>
+          <div class="leg-i"><div class="leg-sq" style="background:rgba(34,197,94,0.22);border-color:var(--dk-green2)"></div>Recebido</div>
+          <div class="leg-i"><div class="leg-sq" style="background:rgba(239,68,68,0.18);border-color:var(--dk-red2)"></div>Perdido</div>
+          <div class="leg-i"><div class="leg-sq" style="background:rgba(139,92,246,0.22);border-color:var(--dk-purple2)"></div>Reenviado</div>
+        </div>
+
+        <div class="sim-lane">
+          <div class="sim-node"><div class="sim-node-ic">💻</div><div class="sim-node-lb">Dispositivo A</div><div class="sim-node-ip">192.168.1.10</div></div>
+          <div class="sim-canal"><div class="canal-line"></div><div class="pkts-row" id="pktsRow"></div></div>
+          <div class="sim-node"><div class="sim-node-ic">📱</div><div class="sim-node-lb">Dispositivo B</div><div class="sim-node-ip">192.168.1.20</div></div>
+        </div>
+
+        <div class="stats-r" id="statsRow" style="display:none">
+          <span class="stat st-b" id="stT">Total: 0</span>
+          <span class="stat st-g" id="stO">✓ 0</span>
+          <span class="stat st-r" id="stL">✗ 0</span>
+          <span class="stat st-o" id="stR">↺ 0</span>
+        </div>
+
+        <div class="res-panels">
+          <div class="res-p"><div class="res-lbl">Pacotes de A</div><div class="res-msg" id="resSent"></div></div>
+          <div class="res-p"><div class="res-lbl">Mensagem em B</div><div class="res-msg" id="resMsg"></div></div>
+        </div>
+
+        <div class="dk-lbl">Log de eventos</div>
+        <div class="sim-log" id="simLog"></div>
+      </div>
+      <div class="screen-nav">
+        <button class="btn btn-g" onclick="goTo(2)">← Voltar</button>
+        <button class="btn btn-p" onclick="goTo(4)">Quiz Avaliativo →</button>
+      </div>
+    </div>
+
+    <!-- ═══ TELA 5 — QUIZ (escuro — interação) ═══ -->
+    <div class="screen dark-screen" id="screen-4">
+      <div class="screen-inner">
+        <div class="interact-banner">
+          <div class="ib-dot"></div>
+          <span class="ib-text">AVALIAÇÃO — Clique na alternativa correta</span>
+        </div>
+        <div class="quiz-hdr">
+          <div>
+            <h2 class="sh" style="margin-bottom:2px">Quiz Avaliativo</h2>
+            <span class="quiz-info" id="qInfo">Questão 1 de 10 · Nota: —</span>
+          </div>
+          <span class="badge bdg-orange">0 a 10 pontos</span>
+        </div>
+        <div id="quizArea">
+          <div class="q-num-badge" id="qNumBadge">Questão 01 / 10</div>
+          <div class="q-text" id="qText"></div>
+          <div class="q-opts" id="qOpts"></div>
+          <div class="q-feedback" id="qFb"></div>
+        </div>
+        <div id="scoreArea" style="display:none"></div>
+        <div class="quiz-nav">
+          <button class="btn btn-g" id="btnQPrev" onclick="qNav(-1)">← Anterior</button>
+          <div class="q-progress" id="qDots"></div>
+          <button class="btn btn-p" id="btnQNext" onclick="qNav(1)">Próxima →</button>
+        </div>
+      </div>
+      <div class="screen-nav">
+        <button class="btn btn-g" onclick="goTo(3)">← Voltar</button>
+        <button class="btn btn-p" id="btnToGlos" onclick="goTo(5)" disabled>Glossário →</button>
+      </div>
+    </div>
+
+    <!-- ═══ TELA 6 — GLOSSÁRIO (claro) ═══ -->
+    <div class="screen" id="screen-5">
+      <div class="screen-inner">
+        <div class="glos-note">
+          <span class="gn-icon">📓</span>
+          <span class="gn-text">Registre em seu caderno os termos abaixo e suas definições!</span>
+        </div>
+        <div class="glos-grid">
+          <div class="glos-c"><div class="glos-term gt-blue">Protocolo</div><div class="glos-def">Conjunto de regras que computadores seguem para se comunicar — o "idioma" da rede.</div></div>
+          <div class="glos-c"><div class="glos-term gt-orange">Pacote</div><div class="glos-def">Pequeno fragmento de dados com cabeçalho (endereço e sequência) e o conteúdo real.</div></div>
+          <div class="glos-c"><div class="glos-term gt-blue">IP</div><div class="glos-def">Internet Protocol. Endereço único de cada dispositivo — como um CEP digital. Ex: 192.168.1.10</div></div>
+          <div class="glos-c"><div class="glos-term gt-green">TCP</div><div class="glos-def">Transmission Control Protocol. Garante a entrega de todos os pacotes e solicita reenvio dos perdidos.</div></div>
+          <div class="glos-c"><div class="glos-term gt-purple">Roteador</div><div class="glos-def">Equipamento que recebe pacotes e decide o melhor caminho para enviá-los ao próximo ponto.</div></div>
+          <div class="glos-c"><div class="glos-term gt-orange">Fragmentação</div><div class="glos-def">Dividir um arquivo grande em pacotes menores para transmitir pela rede sem congestionamento.</div></div>
+          <div class="glos-c"><div class="glos-term gt-green">Remontagem</div><div class="glos-def">Reunir os pacotes recebidos na ordem correta para reconstruir a informação original no destino.</div></div>
+          <div class="glos-c"><div class="glos-term gt-teal">HTTPS</div><div class="glos-def">Versão segura do HTTP. O "S" indica criptografia — os pacotes viajam protegidos. Ver cadeado no navegador.</div></div>
+          <div class="glos-c"><div class="glos-term gt-red">Latência</div><div class="glos-def">Tempo que um pacote leva do remetente ao destinatário. Quanto menor, mais rápida a conexão.</div></div>
+        </div>
+        <div class="done-card">
+          <span class="done-em">🎉</span>
+          <div class="done-title">Parabéns! Você completou a Aula 1!</div>
+          <div class="done-sub">A partir de agora, toda vez que você abrir um site ou enviar uma mensagem, vai saber que por trás existem <strong>bilhões de pacotes e regras</strong> trabalhando juntos.</div>
+          <div class="done-chips">
+            <span class="chip ch-blue">📦 Pacotes: ✓</span>
+            <span class="chip ch-green">🌐 TCP/IP: ✓</span>
+            <span class="chip ch-orange">📍 Endereço IP: ✓</span>
+          </div>
+        </div>
+      </div>
+      <div class="screen-nav">
+        <button class="btn btn-g" onclick="goTo(4)">← Voltar</button>
+        <span class="sn-info" style="color:var(--green2);font-weight:800">✅ Aula Concluída!</span>
+      </div>
+    </div>
+
+  </div><!-- /screens -->
+
+  <div class="footer-brand">Material Pedagógico – Profª Adriana Bett Terebinto © 2026</div>
+</div><!-- /app -->
+
+<script>
+// ── NAVEGAÇÃO ─────────────────────────────────────────────────
+const LABELS = ['Introdução','Conceitos','Dinâmica','Simulador','Quiz','Glossário'];
+const ICONS  = ['🌐','💡','⚡','📡','📝','📖'];
+// telas escuras (interação)
+const DARK_SCREENS = [2,3,4];
+let current = 0, unlocked = 0;
+
+function buildNav() {
+  const c = document.getElementById('tbSteps');
+  c.innerHTML = '';
+  LABELS.forEach((l,i) => {
+    const d = document.createElement('div');
+    const isDark = DARK_SCREENS.includes(i);
+    d.className = 'tb-step'
+      + (i===current?' active'+(isDark?' dark-active':''):'')
+      + (i<current?' done':'')
+      + (i>unlocked?' locked':'');
+    d.innerHTML = `<span class="tb-dot"></span>${ICONS[i]} ${l}`;
+    d.onclick = () => { if(i<=unlocked) goTo(i); };
+    c.appendChild(d);
+  });
+}
+
+function goTo(idx) {
+  if(idx<0||idx>5) return;
+  document.getElementById('screen-'+current).classList.remove('active');
+  current = idx;
+  if(idx>unlocked) unlocked = idx;
+  document.getElementById('screen-'+current).classList.add('active');
+  buildNav();
+  const pct = Math.round((unlocked/5)*100);
+  document.getElementById('tbFill').style.width = pct+'%';
+  document.getElementById('tbPct').textContent = pct+'%';
+  if(idx===4) renderQuiz();
+}
+buildNav();
+document.getElementById('screen-0').classList.add('active');
+
+// ── TELA 2: ANATOMIA DO PACOTE ────────────────────────────────
+const PKT_INFO = {
+  orig:'<strong>IP de Origem (192.168.1.10):</strong> O "endereço de retorno" — informa de onde o pacote partiu. Na teoria = campo "De:".',
+  dest:'<strong>IP de Destino (216.58.202.14):</strong> Para onde o pacote vai. Este IP pertence ao Google! Na teoria = campo "Para:".',
+  seq: '<strong>Número de Sequência (3 de 47):</strong> Indica que este é o 3.º de 47 pacotes. Garante que a mensagem seja remontada na ordem certa.',
+  pay: '<strong>Dado / Payload (1472 bytes):</strong> O conteúdo real transportado — um pedaço da foto, mensagem ou vídeo.'
+};
+function showPktInfo(k) {
+  const el = document.getElementById('pktInfo');
+  el.innerHTML = PKT_INFO[k];
+  el.style.display = 'block';
+}
+
+// ── TELA 3: DINÂMICA ──────────────────────────────────────────
+const PKT_COLORS = ['#4f8ef7','#2dd4bf','#4ade80','#fbbf24','#a78bfa'];
+let stepsChecked = [false,false,false,false];
+
+function buildPackets() {
+  const frase = document.getElementById('fraseInput').value.trim().toUpperCase();
+  const words = frase.split(/\s+/).filter(Boolean).slice(0,5);
+  const grid  = document.getElementById('pktCards');
+  grid.innerHTML = '';
+  if(!words.length) return;
+  words.forEach((w,i) => {
+    const d = document.createElement('div');
+    d.className = 'pkt-demo';
+    d.style.borderTopColor = PKT_COLORS[i%5];
+    d.style.borderTopWidth = '3px';
+    d.innerHTML = `
+      <div class="pd-top">PACOTE ${i+1} DE ${words.length}</div>
+      <div class="pd-row"><span style="color:var(--dk-text3)">De:</span> <strong style="color:var(--dk-blue2)">Disp. A</strong></div>
+      <div class="pd-row"><span style="color:var(--dk-text3)">Para:</span> <strong style="color:var(--dk-green2)">Disp. B</strong></div>
+      <div class="pd-word" style="color:${PKT_COLORS[i%5]}">${w}</div>`;
+    grid.appendChild(d);
+  });
+}
+
+function checkStep(n) {
+  const step = document.getElementById('ds'+n);
+  stepsChecked[n-1] = !stepsChecked[n-1]; // toggle
+  const cb = step.querySelector('input[type=checkbox]');
+  stepsChecked[n-1] = cb.checked;
+  if(cb.checked) step.classList.add('done-step');
+  else step.classList.remove('done-step');
+  // mostrar score se todos marcados
+  const all = stepsChecked.every(Boolean);
+  document.getElementById('dinScore').style.display = all ? 'block' : 'none';
+}
+
+function checkResposta() {
+  const r = document.getElementById('respostaPerda').value.trim().toLowerCase();
+  const chk = document.getElementById('chk4');
+  if(r.length > 5) { chk.checked = true; checkStep(4); }
+}
+
+// ── TELA 4: SIMULADOR ─────────────────────────────────────────
+let simPkts=[],simTimer=null,nOk=0,nLost=0,nResend=0;
+
+function updLoss(){document.getElementById('lossVal').textContent=document.getElementById('lossSlider').value+'%'}
+function updSpeed(){
+  const v=+document.getElementById('speedSlider').value;
+  document.getElementById('speedVal').textContent=['⚡','⚡⚡','⚡⚡⚡','⚡⚡⚡⚡','⚡⚡⚡⚡⚡'][v-1];
+}
+function applyScenario(loss,speed){
+  resetSim();
+  document.getElementById('lossSlider').value=loss; updLoss();
+  document.getElementById('speedSlider').value=speed; updSpeed();
+}
+function simLog(msg,cls='ll-sys'){
+  const el=document.getElementById('simLog');
+  const d=document.createElement('div'); d.className=cls;
+  const t=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  d.textContent=`[${t}] ${msg}`; el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+function renderPkts(){
+  const c=document.getElementById('pktsRow'); c.innerHTML='';
+  simPkts.forEach(p=>{
+    const el=document.createElement('div');
+    el.className='pk pk-'+p.state;
+    el.textContent=p.id; el.title=`PKT ${p.id} | "${p.word}"`; c.appendChild(el);
+  });
+}
+function updStats(){
+  document.getElementById('statsRow').style.display='flex';
+  document.getElementById('stT').textContent='Total: '+simPkts.length;
+  document.getElementById('stO').textContent='✓ '+nOk;
+  document.getElementById('stL').textContent='✗ '+nLost;
+  document.getElementById('stR').textContent='↺ '+nResend;
+}
+function buildMsg(){
+  const m={};
+  simPkts.filter(p=>p.state==='ok').forEach(p=>m[p.id]=p.word);
+  return Object.keys(m).map(Number).sort((a,b)=>a-b).map(k=>m[k]).join(' ');
+}
+function resetSim(){
+  clearInterval(simTimer); simPkts=[]; nOk=0; nLost=0; nResend=0;
+  document.getElementById('pktsRow').innerHTML='';
+  document.getElementById('resSent').textContent='';
+  const rm=document.getElementById('resMsg'); rm.textContent=''; rm.classList.remove('done');
+  document.getElementById('simLog').innerHTML='';
+  document.getElementById('statsRow').style.display='none';
+  document.getElementById('btnStart').disabled=false;
+  document.getElementById('btnDrop').disabled=true;
+  document.getElementById('simFrase').disabled=false;
+  simLog('Simulador pronto. Escolha um cenário ou clique em Transmitir.','ll-sys');
+}
+function dropPkt(){
+  const next=simPkts.find(p=>p.state==='wait');
+  if(next){next.state='lost';simLog(`⚡ PKT ${next.id} marcado para ser perdido!`,'ll-err');renderPkts();}
+}
+function startSim(){
+  const frase=document.getElementById('simFrase').value.trim().toUpperCase();
+  if(!frase){simLog('⚠ Digite uma frase.','ll-warn');return;}
+  const words=frase.split(/\s+/).filter(Boolean);
+  if(words.length<2){simLog('⚠ Use pelo menos 2 palavras.','ll-warn');return;}
+  resetSim();
+  simPkts=words.map((w,i)=>({id:i+1,word:w,state:'wait'}));
+  document.getElementById('btnStart').disabled=true;
+  document.getElementById('btnDrop').disabled=false;
+  document.getElementById('simFrase').disabled=true;
+  updStats(); renderPkts();
+  document.getElementById('resSent').textContent=simPkts.map(p=>`[${p.id}:"${p.word}"]`).join(' ');
+  simLog(`Iniciando: ${simPkts.length} pacotes para "${frase}"`,'ll-info');
+  const loss=+document.getElementById('lossSlider').value;
+  const speed=+document.getElementById('speedSlider').value;
+  const delay=[1400,1100,800,580,360][speed-1];
+  let idx=0;
+  simTimer=setInterval(()=>{
+    if(idx>=simPkts.length){clearInterval(simTimer);checkDone();return;}
+    const p=simPkts[idx];
+    if(p.state==='wait'||p.state==='lost'){
+      const lose=p.state==='lost'||(loss>0&&Math.random()*100<loss);
+      p.state='move'; simLog(`→ PKT ${p.id} ("${p.word}") em trânsito...`,'ll-sys'); renderPkts();
+      setTimeout(()=>{
+        if(lose&&p.state!=='ok'){
+          p.state='lost'; nLost++;
+          simLog(`✖ PKT ${p.id} PERDIDO!`,'ll-err'); updStats(); renderPkts();
+          setTimeout(()=>{
+            simLog(`◀ B→A: "Falta o pacote ${p.id}, reenvie!"`,'ll-warn');
+            p.state='resend'; nResend++; updStats(); renderPkts();
+            setTimeout(()=>{p.state='ok';nOk++;simLog(`✔ PKT ${p.id} reenviado e confirmado.`,'ll-ok');updStats();renderPkts();document.getElementById('resMsg').textContent=buildMsg();},delay);
+          },delay*.8);
+        } else {
+          p.state='ok';nOk++;simLog(`✔ PKT ${p.id} ("${p.word}") chegou em B.`,'ll-ok');updStats();renderPkts();document.getElementById('resMsg').textContent=buildMsg();
+        }
+      },delay*.9);
+      idx++;
+    }
+  },delay);
+}
+function checkDone(){
+  if(simPkts.every(p=>p.state==='ok')){
+    const msg=buildMsg();
+    const el=document.getElementById('resMsg'); el.textContent=msg; el.classList.add('done');
+    document.getElementById('btnDrop').disabled=true;
+    simLog(`✅ Transmissão completa! "${msg}"`,'ll-ok');
+    simLog(`📊 ${simPkts.length} pkts | ${nLost} perdidos | ${nResend} reenviados`,'ll-info');
+  } else { setTimeout(checkDone,400); }
+}
+resetSim();
+
+// ── TELA 5: QUIZ ──────────────────────────────────────────────
+const QUESTIONS = [
+  {q:"Por que a internet divide os dados em pacotes antes de enviá-los?",opts:["Para comprimir os arquivos e economizar espaço","Para evitar congestionamento e permitir que vários usuários usem a rede ao mesmo tempo","Porque os cabos são finos demais para arquivos grandes","Para deixar os dados mais seguros contra hackers"],ans:1,exp:"✅ Correto! Dividindo em pacotes, múltiplos usuários podem usar a rede simultaneamente. Um arquivo inteiro bloquearia o caminho de todos os outros."},
+  {q:"O que representa o Endereço IP em uma rede de computadores?",opts:["A velocidade de conexão do dispositivo","O nome do provedor de internet","O endereço único que identifica cada dispositivo na rede, como um CEP digital","O protocolo de segurança utilizado"],ans:2,exp:"✅ Correto! O IP funciona como o endereço de um imóvel: identifica exatamente onde cada dispositivo está na rede."},
+  {q:"Qual é a principal função do protocolo TCP?",opts:["Atribuir um endereço único a cada computador","Garantir que todos os pacotes chegaram ao destino e solicitar reenvio dos que se perderem","Decidir o caminho mais rápido para os pacotes","Criptografar os dados durante a transmissão"],ans:1,exp:"✅ Correto! O TCP é o 'controlador de qualidade'. Confirma o recebimento de cada pacote e solicita reenvio automaticamente se algum se perder."},
+  {q:"Na dinâmica dos pacotes, o componente que encaminha os pacotes pelo caminho mais rápido se chama:",opts:["Endereço IP","Protocolo TCP","Roteador","Payload do pacote"],ans:2,exp:"✅ Correto! O Roteador é o equipamento que recebe os pacotes e decide o melhor caminho para enviá-los ao próximo ponto da rede."},
+  {q:"Um download parou em 97% e deu erro. Com base no que aprendemos, o que provavelmente aconteceu?",opts:["O arquivo era muito grande para a internet","Um ou mais pacotes se perderam e o protocolo não conseguiu completar a remontagem","O servidor desligou o computador","O endereço IP mudou durante o download"],ans:1,exp:"✅ Correto! Se pacotes se perdem e o TCP não consegue garantir o reenvio, o download falha porque a remontagem fica incompleta."},
+  {q:"O que significa o 'S' em HTTPS?",opts:["Server (servidor)","Speed (velocidade)","Secure (seguro) — os pacotes são criptografados durante a transmissão","Standard (padrão)"],ans:2,exp:"✅ Correto! HTTPS usa criptografia (TLS/SSL). Os pacotes viajam 'trancados' — mesmo interceptados, não podem ser lidos."},
+  {q:"Você está em uma videochamada e a imagem trava por alguns segundos. O que está acontecendo?",opts:["Seu celular está sem memória","Pacotes de vídeo estão se perdendo ou chegando com muito atraso (alta latência)","O protocolo HTTP está sobrecarregado","Seu endereço IP foi bloqueado"],ans:1,exp:"✅ Correto! O travamento indica que pacotes chegaram atrasados ou se perderam. O TCP pede reenvio, mas enquanto isso a imagem para."},
+  {q:"O que é o 'número de sequência' em um pacote de dados?",opts:["O tamanho do pacote em bytes","Um número que indica a posição do pacote na mensagem original, para remontar na ordem certa","O endereço IP de destino","A velocidade com que o pacote foi enviado"],ans:1,exp:"✅ Correto! O número de sequência funciona como a numeração das páginas de um livro: garante que os pacotes sejam remontados na ordem correta."},
+  {q:"Por que dispositivos diferentes (Android, iPhone, Windows) conseguem se comunicar pela internet?",opts:["Porque usam o mesmo sistema operacional","Porque todos têm o mesmo fabricante","Porque todos seguem os mesmos protocolos de comunicação (TCP/IP), que funcionam como um idioma universal","Porque a internet traduz automaticamente os dados"],ans:2,exp:"✅ Correto! Os protocolos são um idioma universal. Qualquer dispositivo que 'fale' TCP/IP consegue se comunicar com os outros na rede."},
+  {q:"Qual sequência descreve corretamente o caminho de uma foto enviada pelo WhatsApp?",opts:["A foto vai inteira de uma vez pelo cabo","A foto é dividida em pacotes → cada pacote viaja pelo caminho mais rápido → os pacotes são remontados no destino","A foto fica armazenada no roteador até o destinatário abrir o WhatsApp","O WhatsApp converte a foto em texto antes de enviar"],ans:1,exp:"✅ Correto! Esse é exatamente o processo: fragmentação → transmissão por múltiplos caminhos → remontagem no destino."}
+];
+
+let qCurrent=0, qAnswers=new Array(10).fill(null), quizBuilt=false;
+
+function renderQuiz(){if(!quizBuilt){buildDots();quizBuilt=true;}showQuestion(0);}
+
+function buildDots(){
+  const c=document.getElementById('qDots'); c.innerHTML='';
+  QUESTIONS.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='q-dot'+(i===0?' current':'');
+    d.id='qdot'+i; d.onclick=()=>showQuestion(i); c.appendChild(d);
+  });
+}
+
+function showQuestion(idx){
+  if(document.getElementById('scoreArea').style.display!=='none') return;
+  qCurrent=idx;
+  const q=QUESTIONS[idx];
+  document.getElementById('qNumBadge').textContent=`Questão ${String(idx+1).padStart(2,'0')} / 10`;
+  document.getElementById('qText').textContent=q.q;
+  const opts=document.getElementById('qOpts'); opts.innerHTML='';
+  q.opts.forEach((o,oi)=>{
+    const d=document.createElement('div');
+    d.className='q-opt'+(qAnswers[idx]!==null?' disabled':'');
+    if(qAnswers[idx]!==null){
+      if(oi===q.ans) d.classList.add('correct');
+      else if(oi===qAnswers[idx]&&qAnswers[idx]!==q.ans) d.classList.add('wrong');
+    }
+    d.innerHTML=`<span class="q-opt-lt">${String.fromCharCode(65+oi)}</span>${o}`;
+    if(qAnswers[idx]===null) d.onclick=()=>answerQ(idx,oi);
+    opts.appendChild(d);
+  });
+  const fb=document.getElementById('qFb');
+  if(qAnswers[idx]!==null){
+    fb.className='q-feedback '+(qAnswers[idx]===q.ans?'qf-ok':'qf-err');
+    fb.textContent=q.exp; fb.style.display='block';
+  } else fb.style.display='none';
+  document.querySelectorAll('.q-dot').forEach((d,i)=>{
+    d.className='q-dot';
+    if(i===idx) d.classList.add('current');
+    if(qAnswers[i]!==null){d.classList.add('answered');d.classList.add(qAnswers[i]===QUESTIONS[i].ans?'qd-ok':'qd-err');}
+  });
+  const done=qAnswers.filter(a=>a!==null).length;
+  document.getElementById('qInfo').textContent=`Questão ${idx+1} de 10 · Respondidas: ${done}/10`;
+  document.getElementById('btnQPrev').disabled=idx===0;
+  document.getElementById('btnQNext').textContent=idx===9?'Ver Resultado →':'Próxima →';
+}
+
+function answerQ(qi,oi){
+  if(qAnswers[qi]!==null) return;
+  qAnswers[qi]=oi; showQuestion(qi);
+  if(qAnswers.every(a=>a!==null)){document.getElementById('btnToGlos').disabled=false;setTimeout(showScore,800);}
+}
+
+function qNav(dir){
+  if(dir===1&&qCurrent===9){showScore();return;}
+  showQuestion(Math.max(0,Math.min(9,qCurrent+dir)));
+}
+
+function showScore(){
+  const correct=qAnswers.filter((a,i)=>a===QUESTIONS[i].ans).length;
+  const nota=correct;
+  const cls=nota>=7?'sc-a':nota>=5?'sc-b':'sc-c';
+  const msg=nota>=9?'Excelente! Domínio completo do conteúdo!':nota>=7?'Muito bem! Você entendeu os conceitos fundamentais.':nota>=5?'Bom! Revise os conceitos que errou.':'Continue estudando! Releia os conceitos e tente novamente.';
+  let detail='';
+  QUESTIONS.forEach((q,i)=>{
+    const ok=qAnswers[i]===q.ans;
+    detail+=`<div class="sd-item ${ok?'sd-ok':'sd-err'}"><div class="sd-q">${i+1}. ${q.q.substring(0,55)}…</div><div class="sd-ans">${ok?'✅ Correto':'❌ '+q.opts[q.ans]}</div></div>`;
+  });
+  document.getElementById('quizArea').style.display='none';
+  document.getElementById('qDots').style.display='none';
+  document.getElementById('btnQPrev').style.display='none';
+  document.getElementById('btnQNext').style.display='none';
+  const sa=document.getElementById('scoreArea'); sa.style.display='block';
+  sa.innerHTML=`<div class="score-panel"><div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--dk-text3);margin-bottom:0.3rem">Resultado Final</div><div class="score-circle ${cls}"><span class="sc-nota">${nota}</span><span class="sc-den">/10</span></div><div class="score-msg">${msg}</div><div class="score-sub">${correct} de 10 questões corretas</div><div class="score-detail">${detail}</div><button class="btn btn-g" style="margin-top:0.5rem" onclick="retryQuiz()">↺ Tentar Novamente</button></div>`;
+  document.getElementById('btnToGlos').disabled=false;
+  document.getElementById('qInfo').textContent=`Nota Final: ${nota}/10 — ${correct} acertos`;
+}
+
+function retryQuiz(){
+  qAnswers=new Array(10).fill(null); qCurrent=0; quizBuilt=false;
+  document.getElementById('scoreArea').style.display='none';
+  document.getElementById('quizArea').style.display='block';
+  document.getElementById('qDots').style.display='flex';
+  document.getElementById('btnQPrev').style.display='inline-flex';
+  document.getElementById('btnQNext').style.display='inline-flex';
+  renderQuiz();
+}
+</script>
+</body>
+</html>
